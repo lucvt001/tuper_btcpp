@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4">
+  <BehaviorTree ID="BaseControl">
+    <Parallel failure_count="1"
+              success_count="-1">
+      <PublishFloat topic_name="core/thruster_cmd_float"
+                    data="{rpm_float}"
+                    duration="{duration}"
+                    frequency="10.0"/>
+      <PublishFloat topic_name="core/thrust_vector_cmd_horizontal"
+                    data="{hor_vec}"
+                    duration="{duration}"
+                    frequency="10.0"/>
+      <PublishFloat topic_name="core/thrust_vector_cmd_vertical"
+                    data="0.03"
+                    duration="{duration}"
+                    frequency="10.0"/>
+    </Parallel>
+  </BehaviorTree>
+
+  <BehaviorTree ID="Test">
+    <Sequence>
+      <SubTree ID="BaseControl"
+               rpm_float="0.6"
+               hor_vec="0.0"
+               duration="10.0"
+               _autoremap="true"/>
+      <LogToRos log_msg="Start turning"
+                log_level="INFO"/>
+      <SubTree ID="BaseControl"
+               rpm_float="0.5"
+               hor_vec="-0.04"
+               duration="10.0"
+               _autoremap="true"/>
+      <LogToRos log_msg="Straight again"
+                log_level="INFO"/>
+      <SubTree ID="BaseControl"
+               rpm_float="0.6"
+               hor_vec="0.0"
+               duration="20.0"
+               _autoremap="true"/>
+    </Sequence>
+  </BehaviorTree>
+
+  <!-- Description of Node Models (used by Groot) -->
+  <TreeNodesModel>
+    <SubTree ID="BaseControl"
+             editable="true">
+      <input_port name="rpm_float"
+                  default="0.0">Between -1.0 and 1.0</input_port>
+      <input_port name="hor_vec"
+                  default="0.0">Horizontal vector, between -0.2 and 0.2</input_port>
+      <input_port name="duration"
+                  default="1.0">In seconds</input_port>
+    </SubTree>
+    <Action ID="LogToRos">
+      <input_port name="log_msg"
+                  type="std::string"/>
+      <input_port name="log_level"
+                  default="INFO"
+                  type="std::string">Log level: DEBUG, INFO, WARN, ERROR, FATAL</input_port>
+    </Action>
+    <Action ID="PublishFloat">
+      <input_port name="topic_name"
+                  default="__default__placeholder__"
+                  type="std::string">Topic name</input_port>
+      <input_port name="data"
+                  default="0.0"
+                  type="float">Value of the float32 message</input_port>
+      <input_port name="duration"
+                  default="1.0"
+                  type="float">Duration to publish for (secs)</input_port>
+      <input_port name="frequency"
+                  default="10.0"
+                  type="float">Frequency of the published message (Hz)</input_port>
+    </Action>
+  </TreeNodesModel>
+
+</root>
