@@ -3,11 +3,11 @@
   <BehaviorTree ID="BaseControl">
     <Parallel failure_count="1"
               success_count="-1">
-      <PublishFloat topic_name="core/thruster_cmd_float"
+      <PublishFloat topic_name="control/throttle"
                     data="{rpm_float}"
                     duration="{duration}"
                     frequency="10.0"/>
-      <PublishFloat topic_name="core/thrust_vector_cmd_horizontal"
+      <PublishFloat topic_name="control/steering"
                     data="{hor_vec}"
                     duration="{duration}"
                     frequency="10.0"/>

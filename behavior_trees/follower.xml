@@ -19,7 +19,7 @@
                 success_count="-1">
         <LogToRos log_msg="Slow and furious"
                   log_level="INFO"/>
-        <PublishFloat topic_name="core/thruster_cmd_float"
+        <PublishFloat topic_name="control/throttle"
                       data="0.5"
                       duration="-1.0"
                       frequency="10.0"/>
@@ -37,7 +37,7 @@
                         success_count="-1">
                 <RunPid action_name="y_delta_pid_turn"
                         setpoint="0.0"/>
-                <PublishFloat topic_name="core/thrust_vector_cmd_horizontal/y"
+                <PublishFloat topic_name="control/steering/y"
                               data="0.0"
                               duration="-1.0"
                               frequency="10.0"/>
@@ -84,7 +84,7 @@
                              topic_name="offset_position_y"/>
           <ScriptCondition code="(-0.2&lt;=y) &amp;&amp; (y&lt;=0.2)"/>
         </Sequence>
-        <PublishFloat topic_name="core/thrust_vector_cmd_horizontal/y"
+        <PublishFloat topic_name="control/steering/y"
                       data="0.0"
                       duration="-1.0"
                       frequency="10.0"/>
