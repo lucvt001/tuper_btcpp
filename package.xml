@@ -12,8 +12,6 @@
   <depend>rclcpp</depend>
   <depend>behaviortree_ros2</depend>
   <depend>btcpp_ros2_interfaces</depend>
-  <depend>smarc_msgs</depend>
-  <depend>sam_msgs</depend>
   <depend>std_msgs</depend>
   <depend>tuper_interfaces</depend>
 

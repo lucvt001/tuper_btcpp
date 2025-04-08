@@ -11,8 +11,6 @@ find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(behaviortree_ros2 REQUIRED)
 find_package(btcpp_ros2_interfaces REQUIRED)
-find_package(sam_msgs REQUIRED)
-find_package(smarc_msgs REQUIRED)
 find_package(tuper_interfaces REQUIRED)
 
 include_directories(
@@ -24,8 +22,6 @@ set(ros_dependencies
   std_msgs
   behaviortree_ros2
   btcpp_ros2_interfaces
-  sam_msgs
-  smarc_msgs
   tuper_interfaces
 )
 
