@@ -73,6 +73,20 @@
     </ReactiveSequence>
   </BehaviorTree>
 
+  <BehaviorTree ID="FollowerTest">
+    <Parallel failure_count="1"
+              success_count="-1">
+      <PublishFloat topic_name="control/steering/y_delta"
+                    data="0.0"
+                    duration="-1.0"
+                    frequency="10.0"/>
+      <RunPid action_name="y_pid"
+              setpoint="0.0"/>
+      <RunPid action_name="x_pid"
+              setpoint="0.0"/>
+    </Parallel>
+  </BehaviorTree>
+
   <BehaviorTree ID="Maintain">
     <Parallel failure_count="1"
               success_count="-1">

@@ -4,11 +4,11 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction
 from launch.substitutions import LaunchConfiguration
-from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.launch_description_sources import PythonLaunchDescriptionSource, FrontendLaunchDescriptionSource
 
 def generate_launch_description():
 
-    config = os.path.join(get_package_share_directory('formation_controller'), 'config', 'overall_params.yaml')
+    # config = os.path.join(get_package_share_directory('formation_controller'), 'config', 'overall_params.yaml')
 
     tree_name_arg = DeclareLaunchArgument(
         'tree_name',
@@ -16,21 +16,38 @@ def generate_launch_description():
         description='Name of the behavior tree to load'
     )
 
-    # Subscribe to gps and heading topic of supreme leader. Broadcast world (utm) -> map, no translation, only rotation
-    # Publish origin gps to /NS/origin_gps so that each agent can calculate its current local position, FLU frame
+    # # Subscribe to gps and heading topic of supreme leader. Broadcast world (utm) -> map, no translation, only rotation
+    # # Publish origin gps to /NS/origin_gps so that each agent can calculate its current local position, FLU frame
+    # origin_pub = Node(
+    #     name='origin_pub',
+    #     executable='origin_pub',
+    #     package='formation_controller', parameters=[config]
+    # )
+
+    # # Listen to gps and heading of this agent. Calculate the local position relative to origin_gps
+    # # And then broadcast the transform world (utm) -> agent
+    # # Only used for agents on the surface with access to gps (aka leaders)
+    # gps_heading_to_tf = Node(
+    #     name='gps_heading_to_tf',
+    #     executable='gps_heading_to_tf',
+    #     package='formation_controller', parameters=[config],
+    # )
+
     origin_pub = Node(
         name='origin_pub',
         executable='origin_pub',
-        package='formation_controller', parameters=[config]
+        package='arduagent',
+        output='screen',
+        parameters=[{
+            'input_topic': 'core/gps',
+            'output_topic': 'origin_gps'
+        }]
     )
 
-    # Listen to gps and heading of this agent. Calculate the local position relative to origin_gps
-    # And then broadcast the transform world (utm) -> agent
-    # Only used for agents on the surface with access to gps (aka leaders)
-    gps_heading_to_tf = Node(
-        name='gps_heading_to_tf',
-        executable='gps_heading_to_tf',
-        package='formation_controller', parameters=[config],
+    mqtt_client = IncludeLaunchDescription(
+        FrontendLaunchDescriptionSource(
+            os.path.join(get_package_share_directory('mqtt_client'), 'launch', 'standalone.launch.ros2.xml')
+        ), launch_arguments={'params_file': os.path.join(get_package_share_directory('arduagent'), 'config', 'mqtt_params_leader.yaml')}.items()
     )
 
     leader_bt = Node(
@@ -56,7 +73,8 @@ def generate_launch_description():
     return LaunchDescription([
         tree_name_arg,
         origin_pub,
-        gps_heading_to_tf,
+        mqtt_client,
+        # gps_heading_to_tf,
         relay_nodes,
         leader_bt,
     ])
