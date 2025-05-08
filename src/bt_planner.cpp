@@ -5,8 +5,10 @@
 
 #include "tuper_btcpp/get_ros_time.hpp"
 #include "tuper_btcpp/publish_float.hpp"
+#include "tuper_btcpp/publish_string.hpp"
 #include "tuper_btcpp/check_float_for_duration.hpp"
 #include "tuper_btcpp/get_float_from_topic.hpp"
+#include "tuper_btcpp/get_string_from_topic.hpp"
 #include "tuper_btcpp/run_pid_client.hpp"
 #include "tuper_btcpp/log_to_ros.hpp"
 #include "tuper_btcpp/utils.hpp"
@@ -39,8 +41,10 @@ int main(int argc, char **argv)
   factory.registerNodeType<ReactiveParallelNode>("ReactiveParallel");
   factory.registerNodeType<GetRosTime>("GetRosTime", params);
   factory.registerNodeType<PublishFloat>("PublishFloat", params);
+  factory.registerNodeType<PublishString>("PublishString", params);
   factory.registerNodeType<CheckFloatForDuration>("CheckFloatForDuration", params);
   factory.registerNodeType<GetFloatFromTopic>("GetFloatFromTopic", params);
+  factory.registerNodeType<GetStringFromTopic>("GetStringFromTopic", params);
   factory.registerNodeType<RunPidClient>("RunPid", params);
   factory.registerNodeType<LogToRos>("LogToRos", params);
 
