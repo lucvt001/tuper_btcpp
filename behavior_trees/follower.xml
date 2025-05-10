@@ -1,147 +1,74 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4">
-  <BehaviorTree ID="Approach">
-    <ReactiveFallback>
-      <ReactiveParallel failure_count="1"
-                        success_count="-1">
-        <CheckFloatForDuration topic_name="offset_position_y"
-                               min="-1.0"
-                               max="1.0"
-                               min_success_duration="2.0"
-                               min_failure_duration="2.0"/>
-        <CheckFloatForDuration topic_name="offset_position_y_delta"
-                               min="-0.25"
-                               max="0.25"
-                               min_success_duration="2.0"
-                               min_failure_duration="2.0"/>
-      </ReactiveParallel>
-      <Parallel failure_count="1"
-                success_count="-1">
-        <LogToRos log_msg="Slow and furious"
-                  log_level="INFO"/>
-        <PublishFloat topic_name="control/throttle"
-                      data="0.5"
-                      duration="-1.0"
-                      frequency="10.0"/>
-        <Sequence>
-          <ReactiveFallback>
-            <CheckFloatForDuration topic_name="offset_position_y_delta"
-                                   min="-0.35"
-                                   max="0.35"
-                                   min_success_duration="1.0"
-                                   min_failure_duration="1.0"/>
-            <Sequence>
-              <LogToRos log_msg="y_delta_pid only"
-                        log_level="INFO"/>
-              <Parallel failure_count="1"
-                        success_count="-1">
-                <RunPid action_name="y_delta_pid_turn"
-                        setpoint="0.0"/>
-                <PublishFloat topic_name="control/steering/y"
-                              data="0.0"
-                              duration="-1.0"
-                              frequency="10.0"/>
-              </Parallel>
-            </Sequence>
-          </ReactiveFallback>
-          <Parallel failure_count="1"
-                    success_count="-1">
-            <LogToRos log_msg="Both y pid"
-                      log_level="INFO"/>
-            <RunPid action_name="y_pid_turn"
-                    setpoint="0.0"/>
-            <RunPid action_name="y_delta_pid_turn"
-                    setpoint="0.0"/>
-          </Parallel>
-        </Sequence>
-      </Parallel>
-    </ReactiveFallback>
-  </BehaviorTree>
-
-  <BehaviorTree ID="CheckCondition">
+  <BehaviorTree ID="FollowerMainTree">
     <Sequence>
-      <GetFloatFromTopic data="{data}"
-                         topic_name="{topic_name}"/>
-      <ScriptCondition code="(min&lt;=data) &amp;&amp; (data&lt;=max)"/>
+      <Script code="state:=&quot;S&quot;; y:=0.0"/>
+      <ReactiveSequence>
+        <GetFloatFromTopic topic_name="gps/offset_position_y"
+                           data="{y}"/>
+        <ReactiveParallel failure_count="1"
+                          success_count="-1">
+          <GetStringFromTopic topic_name="leader1/msg"
+                              data="{state}"/>
+          <SubTree ID="SteeringControl"
+                   offset_position_y="{y}"
+                   turn_state="{state}"
+                   _autoremap="true"/>
+          <SubTree ID="ThrottleControl"
+                   offset_position_y="{y}"
+                   turn_state="{state}"
+                   _autoremap="true"/>
+        </ReactiveParallel>
+      </ReactiveSequence>
     </Sequence>
   </BehaviorTree>
 
-  <BehaviorTree ID="FollowerMainTree">
-    <ReactiveSequence>
-      <SubTree ID="Approach"/>
-      <SubTree ID="Maintain"/>
-    </ReactiveSequence>
-  </BehaviorTree>
-
-  <BehaviorTree ID="FollowerTest">
-    <Parallel failure_count="1"
-              success_count="-1">
-      <PublishFloat topic_name="control/steering/y_delta"
-                    data="0.0"
-                    duration="-1.0"
-                    frequency="10.0"/>
+  <BehaviorTree ID="SteeringControl">
+    <ReactiveFallback>
+      <ReactiveSequence _skipIf="!(state==&quot;T&quot; &amp;&amp; y&lt;-2.0)">
+        <ScriptCondition code="state==&quot;T&quot; || y&lt;-1.0"/>
+        <RunPid action_name="y_pid"
+                setpoint="-9.0"/>
+      </ReactiveSequence>
+      <ReactiveSequence _skipIf="!(state==&quot;T&quot; &amp;&amp; y&gt;2.0)">
+        <ScriptCondition code="state==&quot;T&quot; || y&gt;1.0"/>
+        <RunPid action_name="y_pid"
+                setpoint="9.0"/>
+      </ReactiveSequence>
       <RunPid action_name="y_pid"
               setpoint="0.0"/>
-      <RunPid action_name="x_pid"
-              setpoint="0.0"/>
-    </Parallel>
+    </ReactiveFallback>
   </BehaviorTree>
 
-  <BehaviorTree ID="Maintain">
-    <Parallel failure_count="1"
-              success_count="-1">
-      <LogToRos log_msg="Fast and steady"
-                log_level="INFO"/>
-      <WhileDoElse>
-        <Sequence>
-          <GetFloatFromTopic data="{y}"
-                             topic_name="offset_position_y"/>
-          <ScriptCondition code="(-0.2&lt;=y) &amp;&amp; (y&lt;=0.2)"/>
-        </Sequence>
-        <PublishFloat topic_name="control/steering/y"
-                      data="0.0"
-                      duration="-1.0"
-                      frequency="10.0"/>
-        <RunPid action_name="y_pid"
+  <BehaviorTree ID="ThrottleControl">
+    <ReactiveFallback>
+      <ReactiveSequence>
+        <ScriptCondition code="state==&quot;T&quot; ||  (-2.0&lt;y&amp;&amp;y&lt;2.0)"/>
+        <RunPid action_name="x_pid"
                 setpoint="0.0"/>
-      </WhileDoElse>
-      <RunPid action_name="y_delta_pid"
-              setpoint="0.0"/>
-      <RunPid action_name="x_pid"
-              setpoint="0.0"/>
-    </Parallel>
+      </ReactiveSequence>
+      <PublishFloat topic_name="control/throttle"
+                    data="0.6"
+                    duration="-1.0"
+                    frequency="10.0"/>
+    </ReactiveFallback>
   </BehaviorTree>
 
   <!-- Description of Node Models (used by Groot) -->
   <TreeNodesModel>
-    <Action ID="CheckFloatForDuration">
+    <Action ID="GetFloatFromTopic">
       <input_port name="topic_name"
                   default="__default__placeholder__"
                   type="std::string">Topic name</input_port>
-      <input_port name="min"
-                  type="float"/>
-      <input_port name="max"
-                  type="float"/>
-      <input_port name="min_success_duration"
-                  default="1.0"
-                  type="float">Minimum duration to consider the condition successful</input_port>
-      <input_port name="min_failure_duration"
-                  default="1.0"
-                  type="float">Minimum duration to consider the condition failed</input_port>
-    </Action>
-    <Action ID="GetFloatFromTopic">
       <output_port name="data"
                    type="float">Data received from the topic (float)</output_port>
+    </Action>
+    <Action ID="GetStringFromTopic">
       <input_port name="topic_name"
                   default="__default__placeholder__"
                   type="std::string">Topic name</input_port>
-    </Action>
-    <Action ID="LogToRos">
-      <input_port name="log_msg"
-                  type="std::string"/>
-      <input_port name="log_level"
-                  default="INFO"
-                  type="std::string">Log level: DEBUG, INFO, WARN, ERROR, FATAL</input_port>
+      <output_port name="data"
+                   type="std::string">Data received from the topic (string)</output_port>
     </Action>
     <Action ID="PublishFloat">
       <input_port name="topic_name"
@@ -172,6 +99,16 @@
                   default="0.0"
                   type="float">The desired setpoint</input_port>
     </Action>
+    <SubTree ID="SteeringControl"
+             editable="true">
+      <input_port name="offset_position_y"/>
+      <input_port name="turn_state"/>
+    </SubTree>
+    <SubTree ID="ThrottleControl"
+             editable="true">
+      <input_port name="offset_position_y"/>
+      <input_port name="turn_state"/>
+    </SubTree>
   </TreeNodesModel>
 
 </root>

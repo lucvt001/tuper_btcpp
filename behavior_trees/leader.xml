@@ -18,26 +18,111 @@
     </Parallel>
   </BehaviorTree>
 
-  <BehaviorTree ID="Test">
+  <BehaviorTree ID="TestLeader1Sam">
+    <Sequence>
+      <Parallel failure_count="1"
+                success_count="-1">
+        <PublishString topic_name="acoustic/write/string"
+                       data="1;S"
+                       duration="6.0"
+                       frequency="1.0"/>
+        <SubTree ID="BaseControl"
+                 rpm_float="0.7"
+                 hor_vec="0.0"
+                 duration="30.0"
+                 _autoremap="true"/>
+      </Parallel>
+      <Parallel failure_count="1"
+                success_count="-1">
+        <PublishString topic_name="acoustic/write/string"
+                       data="1;T"
+                       duration="6.0"
+                       frequency="1.0"/>
+        <SubTree ID="BaseControl"
+                 name="Turn"
+                 rpm_float="0.1"
+                 hor_vec="-0.06"
+                 duration="20.0"
+                 _autoremap="true"/>
+      </Parallel>
+      <Parallel failure_count="1"
+                success_count="-1">
+        <PublishString topic_name="acoustic/write/string"
+                       data="1;S"
+                       duration="6.0"
+                       frequency="1.0"/>
+        <Sequence>
+          <SubTree ID="BaseControl"
+                   name="PostTurn"
+                   rpm_float="0.5"
+                   hor_vec="0.0"
+                   duration="20.0"
+                   _autoremap="true"/>
+          <SubTree ID="BaseControl"
+                   rpm_float="0.7"
+                   hor_vec="0.0"
+                   duration="30.0"
+                   _autoremap="true"/>
+        </Sequence>
+      </Parallel>
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="TestLeader2Sam">
     <Sequence>
       <SubTree ID="BaseControl"
-               rpm_float="0.6"
+               rpm_float="0.7"
                hor_vec="0.0"
-               duration="10.0"
+               duration="30.0"
+               _autoremap="true"/>
+      <SubTree ID="BaseControl"
+               name="Turn"
+               rpm_float="1.0"
+               hor_vec="-0.0065"
+               duration="20.0"
+               _autoremap="true"/>
+      <Sequence>
+        <SubTree ID="BaseControl"
+                 name="TurnCompensate"
+                 rpm_float="1.0"
+                 hor_vec="0.0"
+                 duration="4.0"
+                 _autoremap="true"/>
+        <SubTree ID="BaseControl"
+                 name="PostTurn"
+                 rpm_float="0.5"
+                 hor_vec="0.0"
+                 duration="16.0"
+                 _autoremap="true"/>
+        <SubTree ID="BaseControl"
+                 rpm_float="0.7"
+                 hor_vec="0.0"
+                 duration="30.0"
+                 _autoremap="true"/>
+      </Sequence>
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="TestRover">
+    <Sequence>
+      <SubTree ID="BaseControl"
+               rpm_float="0.2"
+               hor_vec="0.0"
+               duration="15.0"
                _autoremap="true"/>
       <LogToRos log_msg="Start turning"
                 log_level="INFO"/>
       <SubTree ID="BaseControl"
-               rpm_float="0.5"
-               hor_vec="-0.04"
+               rpm_float="0.15"
+               hor_vec="-0.12"
                duration="10.0"
                _autoremap="true"/>
       <LogToRos log_msg="Straight again"
                 log_level="INFO"/>
       <SubTree ID="BaseControl"
-               rpm_float="0.6"
+               rpm_float="0.2"
                hor_vec="0.0"
-               duration="20.0"
+               duration="15.0"
                _autoremap="true"/>
     </Sequence>
   </BehaviorTree>
@@ -67,6 +152,19 @@
       <input_port name="data"
                   default="0.0"
                   type="float">Value of the float32 message</input_port>
+      <input_port name="duration"
+                  default="1.0"
+                  type="float">Duration to publish for (secs)</input_port>
+      <input_port name="frequency"
+                  default="10.0"
+                  type="float">Frequency of the published message (Hz)</input_port>
+    </Action>
+    <Action ID="PublishString">
+      <input_port name="topic_name"
+                  default="__default__placeholder__"
+                  type="std::string">Topic name</input_port>
+      <input_port name="data"
+                  type="std::string">String message</input_port>
       <input_port name="duration"
                   default="1.0"
                   type="float">Duration to publish for (secs)</input_port>
