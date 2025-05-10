@@ -2,6 +2,7 @@
 #include "behaviortree_cpp/loggers/bt_file_logger_v2.h"
 #include "behaviortree_cpp/controls/reactive_parallel_node.h"
 #include "rclcpp/rclcpp.hpp"
+#include <chrono>
 
 #include "tuper_btcpp/get_ros_time.hpp"
 #include "tuper_btcpp/publish_float.hpp"
@@ -89,14 +90,22 @@ int main(int argc, char **argv)
 
   signal(SIGINT, inthand);
 
-  nh->declare_parameter("loop_rate", 10);
-  int loop_rate = nh->get_parameter("loop_rate").as_int();
-  int sleep_time = static_cast<int>(1000/loop_rate);
-  while( !stop && rclcpp::ok() && (status == NodeStatus::RUNNING)) 
-  {  
-    status = tree.tickOnce();
-    tree.sleep(chrono::milliseconds(sleep_time));
-  }
+  float loop_rate = nh->declare_parameter("loop_rate", 10.0);
+  auto tick_interval = rclcpp::Duration(static_cast<int>(1000.0 / loop_rate)*1ms);
+  // Create a timer to tick the tree
+  auto timer = rclcpp::create_timer(
+    nh, nh->get_clock(), tick_interval,
+    [&]() {
+      if (status == NodeStatus::RUNNING && rclcpp::ok()) {
+        status = tree.tickOnce();
+      } else {
+        RCLCPP_INFO(nh->get_logger(), "Behavior tree execution completed or interrupted.");
+        rclcpp::shutdown();
+      }
+  });
+
+  // Spin the node
+  rclcpp::spin(nh);
 
   return 0;
 }
