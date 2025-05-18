@@ -32,15 +32,15 @@ def generate_launch_description():
     )
 
     # Relay nodes for Unity with SAM
-    relay_nodes = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(get_package_share_directory('sam_thruster_relay'), 'launch', 'relay_nodes.launch.py')
-        )
-    )
-    relay_nodes = GroupAction([PushRosNamespace(ns), relay_nodes])
+    # relay_nodes = IncludeLaunchDescription(
+    #     PythonLaunchDescriptionSource(
+    #         os.path.join(get_package_share_directory('sam_thruster_relay'), 'launch', 'relay_nodes.launch.py')
+    #     )
+    # )
+    # relay_nodes = GroupAction([PushRosNamespace(ns), relay_nodes])
 
     return LaunchDescription([
         *launch_args,
         leader_bt,
-        relay_nodes,
+        # relay_nodes,
     ])
