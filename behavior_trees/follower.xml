@@ -4,7 +4,7 @@
     <Sequence>
       <Script code="state:=&quot;S&quot;; y:=0.0"/>
       <ReactiveSequence>
-        <GetFloatFromTopic topic_name="gps/offset_position_y"
+        <GetFloatFromTopic topic_name="ukf/offset_position_y"
                            data="{y}"/>
         <ReactiveParallel failure_count="1"
                           success_count="-1">
